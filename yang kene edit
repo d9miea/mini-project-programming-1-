@@ -1,0 +1,392 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// Structure to store patient information
+struct Patient {
+    string name;
+    int age;
+    string contact;
+    string medicalHistory;
+};
+
+// Structure to store appointment information
+struct Appointment {
+    string date;
+    string time;
+    Patient patient;
+    bool booked;
+};
+
+// Constants for system capacity
+const int MAX_APPOINTMENTS = 100;
+const int MAX_DATES = 10;
+const int MAX_TIMESLOTS = 10;
+
+// Global arrays for appointments and availability
+Appointment appointments[MAX_APPOINTMENTS];
+int appointmentCount = 0;
+
+string availableDates[MAX_DATES];
+string availableTimes[MAX_DATES][MAX_TIMESLOTS];
+int timeSlotsCount[MAX_DATES] = {0};
+int dateCount = 0;
+
+// Function prototypes
+void displayMainMenu();
+void checkDateAvailability();
+void checkTimeOnDate();
+void bookAppointment();
+void initializeTimeSlots();
+bool isValidDate(const string& date);
+bool isValidTime(const string& time);
+void clearInputBuffer();
+
+int main() {
+    cout << "=====================================\n";
+    cout << "   CLINIC APPOINTMENT BOOKING SYSTEM\n";
+    cout << "=====================================\n";
+    
+    // Initialize available time slots
+    initializeTimeSlots();
+    
+    int choice;
+    bool running = true;
+    
+    while (running) {
+        displayMainMenu();
+        cout << "Enter your choice (1-4): ";
+        cin >> choice;
+        
+        // Handle invalid input
+        if (cin.fail()) {
+            clearInputBuffer();
+            choice = 0;
+        }
+        
+        switch(choice) {
+            case 1:
+                checkDateAvailability();
+                break;
+            case 2:
+                checkTimeOnDate();
+                break;
+            case 3:
+                bookAppointment();
+                break;
+            case 4:
+                cout << "\nThank you for using the Clinic Booking System!\n";
+                cout << "Exiting...\n";
+                running = false;
+                break;
+            default:
+                cout << "\nInvalid choice! Please select between 1-4.\n";
+        }
+        
+        if (choice != 4) {
+            cout << "\nPress Enter to continue...";
+            clearInputBuffer();
+            cin.get();
+        }
+    }
+    
+    return 0;
+}
+
+void clearInputBuffer() {
+    cin.clear();
+    // Clear up to 1000 characters or until newline
+    for (int i = 0; i < 1000 && cin.get() != '\n'; i++);
+}
+
+void displayMainMenu() {
+    // Clear screen - platform independent method
+    for (int i = 0; i < 50; i++) cout << "\n";
+    
+    cout << "\n=====================================\n";
+    cout << "            MAIN MENU\n";
+    cout << "=====================================\n";
+    cout << "1. Check Date Availability\n";
+    cout << "2. Check Time on Available Date\n";
+    cout << "3. Book Appointment & Fill Patient Details\n";
+    cout << "4. Exit\n";
+    cout << "=====================================\n";
+}
+
+void initializeTimeSlots() {
+    // Initialize some available dates
+    availableDates[0] = "2024-01-15";
+    availableDates[1] = "2024-01-16";
+    availableDates[2] = "2024-01-17";
+    availableDates[3] = "2024-01-18";
+    availableDates[4] = "2024-01-19";
+    dateCount = 5;
+    
+    // Initialize time slots for each date
+    for (int i = 0; i < dateCount; i++) {
+        // Add morning slots
+        availableTimes[i][0] = "09:00";
+        availableTimes[i][1] = "10:00";
+        availableTimes[i][2] = "11:00";
+        // Add afternoon slots
+        availableTimes[i][3] = "14:00";
+        availableTimes[i][4] = "15:00";
+        availableTimes[i][5] = "16:00";
+        timeSlotsCount[i] = 6;
+    }
+}
+
+void checkDateAvailability() {
+    // Clear screen
+    for (int i = 0; i < 50; i++) cout << "\n";
+    
+    cout << "\n=====================================\n";
+    cout << "     CHECK DATE AVAILABILITY\n";
+    cout << "=====================================\n";
+    
+    if (dateCount == 0) {
+        cout << "\nNo dates available for booking.\n";
+        return;
+    }
+    
+    cout << "\nAvailable Dates for Appointment:\n";
+    cout << "---------------------------------\n";
+    
+    for (int i = 0; i < dateCount; i++) {
+        if (timeSlotsCount[i] > 0) {
+            cout << (i + 1) << ". " << availableDates[i] << " ("
+                 << timeSlotsCount[i] << " slots available)\n";
+        }
+    }
+    
+    cout << "\nNote: Dates are in YYYY-MM-DD format.\n";
+}
+
+void checkTimeOnDate() {
+    // Clear screen
+    for (int i = 0; i < 50; i++) cout << "\n";
+    
+    cout << "\n=====================================\n";
+    cout << "   CHECK TIME ON AVAILABLE DATE\n";
+    cout << "=====================================\n";
+    
+    string date;
+    cout << "\nEnter date to check available times (YYYY-MM-DD): ";
+    cin >> date;
+    
+    // Validate date format
+    if (!isValidDate(date)) {
+        cout << "\nInvalid date format! Please use YYYY-MM-DD format.\n";
+        return;
+    }
+    
+    // Find the date in available dates
+    int dateIndex = -1;
+    for (int i = 0; i < dateCount; i++) {
+        if (availableDates[i] == date) {
+            dateIndex = i;
+            break;
+        }
+    }
+    
+    // Check if date exists and has available slots
+    if (dateIndex == -1) {
+        cout << "\nDate " << date << " is not in the schedule.\n";
+    } else if (timeSlotsCount[dateIndex] == 0) {
+        cout << "\nNo appointments available on " << date << " (fully booked)\n";
+    } else {
+        cout << "\nAvailable time slots on " << date << ":\n";
+        cout << "-----------------------------------------\n";
+        
+        for (int j = 0; j < timeSlotsCount[dateIndex]; j++) {
+            cout << (j + 1) << ". " << availableTimes[dateIndex][j] << "\n";
+        }
+        
+        cout << "\nTotal available slots: " << timeSlotsCount[dateIndex] << "\n";
+    }
+}
+
+void bookAppointment() {
+    // Clear screen
+    for (int i = 0; i < 50; i++) cout << "\n";
+    
+    cout << "\n=====================================\n";
+    cout << "     BOOK APPOINTMENT\n";
+    cout << "=====================================\n";
+    
+    string date, time;
+    
+    // Get date
+    cout << "\nEnter appointment date (YYYY-MM-DD): ";
+    cin >> date;
+    
+    if (!isValidDate(date)) {
+        cout << "\nInvalid date format! Please use YYYY-MM-DD format.\n";
+        return;
+    }
+    
+    // Find the date in available dates
+    int dateIndex = -1;
+    for (int i = 0; i < dateCount; i++) {
+        if (availableDates[i] == date) {
+            dateIndex = i;
+            break;
+        }
+    }
+    
+    // Check date availability
+    if (dateIndex == -1) {
+        cout << "\nDate " << date << " is not in the schedule.\n";
+        return;
+    }
+    
+    if (timeSlotsCount[dateIndex] == 0) {
+        cout << "\nNo appointments available on " << date << " (fully booked)\n";
+        return;
+    }
+    
+    // Display available times for selected date
+    cout << "\nAvailable time slots on " << date << ":\n";
+    for (int j = 0; j < timeSlotsCount[dateIndex]; j++) {
+        cout << (j + 1) << ". " << availableTimes[dateIndex][j] << "\n";
+    }
+    
+    // Get time
+    cout << "\nEnter appointment time (HH:MM): ";
+    cin >> time;
+    
+    if (!isValidTime(time)) {
+        cout << "\nInvalid time format! Please use HH:MM format.\n";
+        return;
+    }
+    
+    // Check if time is available and find its position
+    int timeIndex = -1;
+    for (int j = 0; j < timeSlotsCount[dateIndex]; j++) {
+        if (availableTimes[dateIndex][j] == time) {
+            timeIndex = j;
+            break;
+        }
+    }
+    
+    if (timeIndex == -1) {
+        cout << "\nSelected time slot is not available!\n";
+        return;
+    }
+    
+    // Remove the booked time slot by shifting elements
+    for (int j = timeIndex; j < timeSlotsCount[dateIndex] - 1; j++) {
+        availableTimes[dateIndex][j] = availableTimes[dateIndex][j + 1];
+    }
+    timeSlotsCount[dateIndex]--;
+    
+    // Check if we've reached max appointments
+    if (appointmentCount >= MAX_APPOINTMENTS) {
+        cout << "\nSystem is full! Cannot book more appointments.\n";
+        // Add the time slot back
+        timeSlotsCount[dateIndex]++;
+        for (int j = timeSlotsCount[dateIndex] - 1; j > timeIndex; j--) {
+            availableTimes[dateIndex][j] = availableTimes[dateIndex][j - 1];
+        }
+        availableTimes[dateIndex][timeIndex] = time;
+        return;
+    }
+    
+    // Get patient details
+    Patient patient;
+    
+    // Clear input buffer
+    for (int i = 0; i < 1000 && cin.get() != '\n'; i++);
+    
+    cout << "\n=====================================\n";
+    cout << "     PATIENT DETAILS\n";
+    cout << "=====================================\n";
+    
+    cout << "\nEnter patient name: ";
+    getline(cin, patient.name);
+    
+    bool validAge = false;
+    while (!validAge) {
+        cout << "Enter patient age: ";
+        cin >> patient.age;
+        
+        if (cin.fail() || patient.age <= 0 || patient.age > 120) {
+            clearInputBuffer();
+            cout << "Invalid age! Please enter a valid age (1-120): ";
+        } else {
+            validAge = true;
+        }
+    }
+    
+    // Clear input buffer
+    for (int i = 0; i < 1000 && cin.get() != '\n'; i++);
+    
+    cout << "Enter contact number: ";
+    getline(cin, patient.contact);
+    
+    cout << "Enter medical history (or 'none' if none): ";
+    getline(cin, patient.medicalHistory);
+    
+    // Create and store appointment
+    appointments[appointmentCount].date = date;
+    appointments[appointmentCount].time = time;
+    appointments[appointmentCount].patient = patient;
+    appointments[appointmentCount].booked = true;
+    
+    appointmentCount++;
+    
+    // Display confirmation
+    cout << "\n=====================================\n";
+    cout << "     APPOINTMENT CONFIRMED!\n";
+    cout << "=====================================\n";
+    cout << "Appointment Details:\n";
+    cout << "-------------------\n";
+    cout << "Date: " << date << "\n";
+    cout << "Time: " << time << "\n";
+    cout << "Patient: " << patient.name << "\n";
+    cout << "Age: " << patient.age << "\n";
+    cout << "Contact: " << patient.contact << "\n";
+    cout << "Medical History: " << patient.medicalHistory << "\n";
+    cout << "Appointment ID: " << appointmentCount << "\n";
+    cout << "\nYour appointment has been successfully booked!\n";
+    cout << "Total appointments booked: " << appointmentCount << "\n";
+}
+
+// Basic date format validation (YYYY-MM-DD)
+bool isValidDate(const string& date) {
+    if (date.length() != 10) return false;
+    if (date[4] != '-' || date[7] != '-') return false;
+    
+    // Check if all other characters are digits
+    for (int i = 0; i < 10; i++) {
+        if (i == 4 || i == 7) continue;
+        if (date[i] < '0' || date[i] > '9') return false;
+    }
+    
+    // Check month and day ranges (basic validation)
+    int month = ((date[5] - '0') * 10) + (date[6] - '0');
+    int day = ((date[8] - '0') * 10) + (date[9] - '0');
+    
+    return (month >= 1 && month <= 12) && (day >= 1 && day <= 31);
+}
+
+// Basic time format validation (HH:MM)
+bool isValidTime(const string& time) {
+    if (time.length() != 5) return false;
+    if (time[2] != ':') return false;
+    
+    // Check if hours and minutes are digits
+    if (time[0] < '0' || time[0] > '9' || 
+        time[1] < '0' || time[1] > '9' ||
+        time[3] < '0' || time[3] > '9' || 
+        time[4] < '0' || time[4] > '9') {
+        return false;
+    }
+    
+    // Convert to numbers for range checking
+    int hours = ((time[0] - '0') * 10) + (time[1] - '0');
+    int minutes = ((time[3] - '0') * 10) + (time[4] - '0');
+    
+    return (hours >= 0 && hours <= 23) && (minutes >= 0 && minutes <= 59);
+}
